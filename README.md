@@ -1,5 +1,4 @@
-# IXF
-DB2 IXF to JSON converter
+# DB2 IXF to JSON converter
 
 This tool was created when I needed to consume some reference data from remote DB2 z/OS into Redhat Linux environment. The DB2 Connect license was not properly configured, so consuming data directly in Java or PHP client was not an option. Another problem was that DB2 z/OS doesn't provide ways to export result set into CSV format, providing the only option - get file as PC/IXF format.
 
@@ -10,6 +9,7 @@ To get started, you can just drop IXF file and two coverter files in same folder
 php control.php
 
 If it runs without errors, you should find out.json in the same directory.
+
 
 ## License
 
