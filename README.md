@@ -6,11 +6,29 @@ After some reading, I came up with some code that converts IXF file into perfect
 
 To get started, you can just drop IXF file and two coverter files in same folder (I picked /tmp but feel free pick any other folder) and run following command:
 
+```
 php control.php
-
+```
 If it runs without errors, you should find out.json in the same directory.
 
+If you want to change file names, feel free to edit 'in' and 'out' variables in control.php
 
+```php
+
+<?php
+
+// THE CONTROL PART
+
+require'IXFParser.php';
+
+$in = '/tmp/export.ixf';
+$out = '/tmp/out.json';
+
+$r = (new IXFParser())->process($in,$out);
+
+?>
+
+```
 ## License
 
 The MIT License (MIT)
