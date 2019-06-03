@@ -1,4 +1,4 @@
-
+import json
 """
 Description: This class converts DB2 PC / IXF file into JSON file.
 @ param1
@@ -20,7 +20,7 @@ class IXFParser:
     
     def get_header(self, feed, start):
         # read offsets into dict
-        # print date("Y-m-d H:i:s")." Start reading header section for feed "
+        # print(" Start reading header section for feed ")
 
         offsets = {
         'IXFHRECL': 6,
@@ -63,7 +63,7 @@ class IXFParser:
                 'IXFTLSPC' : 257
                 }
 
-            # print    date("Y-m-d H:i:s").    " Start reading table section for feed "
+            # print(" Start reading table section for feed ")
             ret = self.conv(feed, start, offsets)
 
             return ret
@@ -96,12 +96,12 @@ class IXFParser:
         'IXFCDSIZ' : 1
         }
    
-        #print    date("Y-m-d H:i:s").    " Start reading column section for feed "
+        #print(" Start reading column section for feed ")
         ret = self.conv(feed, start, offsets)
 
         return ret
    
-    
+
     def get_data(self, feed, start):
         offsets = {
             'IXFDRECL' : 6,
@@ -123,23 +123,23 @@ class IXFParser:
         t = self.get_table(feed, tstart)
     
         numColumns = int(t["IXFTCCNT"])
-        print(f"We have {numColumns} columns.")
+        # print(f"We have {numColumns} columns.")
     
         cstart = 6 + tstart + t['IXFTRECL']
-        for (i = 0, s = cstart i < numColumns i++)
+        s = cstart
         
-        c[i] = self.get_column_descriptor(feed, s)
-        s += c[i]['IXFCRECL'] + 6
-        
-        ret['recLength'] = 0
-        foreach(c as v)
-       
-            columnName = v['IXFCNAME'].trim()
-            recLength = int(v['IXFCRECL'])
-            columnLength = int(v['IXFCLENG'])
-            ret[columnName] = columnLength
-            ret['recLength'] += columnLength            
-            ret['start'] = s
+        for i in range(0, numColumns):        
+            c[i] = self.get_column_descriptor(feed, s)
+            s += c[i]['IXFCRECL'] + 6
+
+            ret['recLength'] = 0
+            for v in c:
+                columnName = v['IXFCNAME'].strip()
+                recLength = int(v['IXFCRECL'])
+                columnLength = int(v['IXFCLENG'])
+                ret[columnName] = columnLength
+                ret['recLength'] += columnLength            
+                ret['start'] = s
         
         return ret               
             
@@ -148,67 +148,50 @@ class IXFParser:
     
         fp = fopen(feed, 'r')        
         fseek(fp, start, SEEK_SET)
-        foreach(offsets as k = > v)
-        {
-    
-        if (k == 'IXFCDSIZ') // last
-        column
-        of
-        COLUMN
-        DESCRIPTOR
-        {
-        lv = (int)ret['IXFCRECL'] - 868
-        ret[k] = fread(fp, lv)
-        ret['pointer'] = ftell(fp)
-        }
-        elseif(k == 'IXFDCOLS') // last
-        column
-        of
-        DATA
-        COL
-        { // print
-        "\ret['IXFDRECL'] = ".ret['IXFDRECL']
-        // lv2 = (int)ret['IXFDRECL'] - 14
-        lv2 = (int)ret['IXFDRECL'] - 8
-        ret[k] = fread(fp, lv2)
-        ret['pointer'] = ftell(fp)
-        }
-        else
-        {
-        ret[k] = fread(fp, v) // read
-        chunk
-        }
-    
-        }
+        
+        for k, v in offsets.items():
+        
+            # last column of COLUMNDESCRIPTOR
+            if k == 'IXFCDSIZ':   
+                lv = int(ret['IXFCRECL']) - 868
+                ret[k] = fread(fp, lv)
+                ret['pointer'] = ftell(fp)
+                
+            # last column of DATA COL                
+            elif k == 'IXFDCOLS': 
+                #print("\ret['IXFDRECL'] = ".ret['IXFDRECL'])
+                # lv2 = int(ret['IXFDRECL']) - 14
+                lv2 = int(ret['IXFDRECL'] - 8)
+                ret[k] = fread(fp, lv2)
+                ret['pointer'] = ftell(fp)
+                
+            else:                
+                ret[k] = fread(fp, v) # read chunk
+                
         return ret
         
     
     
     def process(f, outfile):
     
-        m = self.getMeta(f) // var_dump(m)
-        ini_set('memory_limit',self.mem)
+        m = self.getMeta(f)
+        # ini_set('memory_limit',self.mem)
         st = m["start"]
-        out = []
+        out = {}
         n = 0
-        do
-        {
-        // print
-        "n"
-        n + +
-        d = self.getData(f, st) // var_dump(d)
-    
-        out[n]["PRODUCT_KEY"] = trim(substr(d["IXFDCOLS"], 0, 11))
-        out[n]["REVENUE_DIVISION"] = trim(substr(d["IXFDCOLS"], 12, 2))
-        out[n]["KEY_PRODUCT_ID"] = trim(substr(d["IXFDCOLS"], 14, 4))
-        out[n]["DESCRIPTION"] = substr(d["IXFDCOLS"], 18, 40)
-    
-        st = d['pointer']
-        }
-        while (d["IXFDRECT"] == "D")
-        json = json_encode(out, JSON_PRETTY_PRINT)
-        w = file_put_contents(outfile, json, FILE_APPEND)
+                      
+        while d["IXFDRECT"] == "D":
+            n = n + 1
+            d = self.getData(f, st)
+
+            out[n]["PRODUCT_KEY"] = substr(d["IXFDCOLS"], 0, 11).strip()
+            out[n]["REVENUE_DIVISION"] = substr(d["IXFDCOLS"], 12, 2).strip()
+            out[n]["KEY_PRODUCT_ID"] = substr(d["IXFDCOLS"], 14, 4).strip()
+            out[n]["DESCRIPTION"] = substr(d["IXFDCOLS"], 18, 40)
+
+            st = d['pointer']
+            json = json_dumps(out, sort_keys=True, indent=4)
+            with open(outfile, "a") as myfile:
+                myfile.write(json)
     
         return n
-
-       
