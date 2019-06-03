@@ -180,7 +180,7 @@ class IXFParser:
         out = {}
         n = 0
                       
-        while d["IXFDRECT"] == "D":
+        while d["IXFDRECT"] != "D":
             n = n + 1
             d = self.getData(f, st)
 
